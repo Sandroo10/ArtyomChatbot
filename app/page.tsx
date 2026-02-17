@@ -8,14 +8,18 @@ export default function HomePage() {
   const [userName, setUserName] = useState<string | null>(null);
 
   return (
-    <div className="relative min-h-screen bg-background">
-      {!userName ? (
-        <NameEntryOverlay onEnter={setUserName} />
-      ) : (
-        <main className="flex min-h-screen items-center justify-center p-4">
-          <ChatPanel userName={userName} />
-        </main>
-      )}
+    <div className="relative min-h-screen overflow-hidden">
+      <div className="fixed inset-0 z-0">
+        <img src="/metro-bg.jpg" alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-background/80" />
+        <div className="absolute inset-0 metro-vignette" />
+      </div>
+
+      <div className="fixed inset-0 z-[1] noise-overlay pointer-events-none" />
+
+      <main className="relative z-10 flex min-h-screen items-center justify-center p-4">
+        {!userName ? <NameEntryOverlay onEnter={setUserName} /> : <ChatPanel userName={userName} />}
+      </main>
     </div>
   );
 }
