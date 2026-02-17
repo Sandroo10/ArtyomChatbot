@@ -16,10 +16,13 @@ interface NameEntryOverlayProps {
 
 const NameEntryOverlay = ({ onEnter }: NameEntryOverlayProps) => {
   const [name, setName] = useState("");
+  const normalizedName = name.trim();
+  const canEnter = normalizedName.length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) onEnter(name.trim());
+    if (!canEnter) return;
+    onEnter(normalizedName);
   };
 
   return (
@@ -28,16 +31,16 @@ const NameEntryOverlay = ({ onEnter }: NameEntryOverlayProps) => {
         <form onSubmit={handleSubmit} className={formCard()}>
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-          <div className="text-center mb-8">
+          <div className="mb-6 text-center sm:mb-8">
             <div className={systemLabel()}>// SYSTEM TERMINAL v2.033</div>
             <h1 className={title()}>IDENTIFICATION REQUIRED</h1>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-5 sm:space-y-6">
             <div>
               <label
                 htmlFor="name-input"
-                className="block font-mono text-sm text-muted-foreground mb-2 tracking-wider"
+                className="mb-2 block font-mono text-xs tracking-wide text-muted-foreground sm:text-sm sm:tracking-wider"
               >
                 Survivor, state your name…
               </label>
@@ -55,8 +58,8 @@ const NameEntryOverlay = ({ onEnter }: NameEntryOverlayProps) => {
 
             <button
               type="submit"
-              disabled={!name.trim()}
-              className={submitButton()}
+              aria-disabled={!canEnter}
+              className={submitButton({ state: canEnter ? "active" : "inactive" })}
               aria-label="Enter the Metro chat"
             >
               Enter the Metro

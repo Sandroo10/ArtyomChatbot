@@ -94,7 +94,7 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
             <div className={avatarInner()}>A</div>
             <div className="absolute inset-0 rounded-full border border-primary/10 group-hover:metro-glow" />
           </button>
-          <div>
+          <div className="min-w-0">
             <h2 className={headerName()}>ARTYOM</h2>
             <p className={headerSubtitle()}>Metro Wanderer / Survivor</p>
           </div>
@@ -130,7 +130,7 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
 
         {/* Input */}
         <form onSubmit={handleSend} className={inputBar()}>
-          <div className="flex gap-3">
+          <div className="flex items-end gap-2 sm:gap-3">
             <input
               type="text"
               value={input}
@@ -145,7 +145,7 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
               className={sendButton()}
               aria-label="Send message"
             >
-              <Send className="w-4 h-4" />
+              <Send className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </form>

@@ -50,7 +50,7 @@ const CharacterModal = ({ open, onClose }: CharacterModalProps) => {
           </p>
         </div>
 
-        <div className="mt-8 flex justify-end">
+        <div className="mt-6 flex justify-end sm:mt-8">
           <button
             onClick={onClose}
             className={closeButton()}

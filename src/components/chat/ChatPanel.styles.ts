@@ -1,39 +1,39 @@
 import { cva } from "class-variance-authority";
 
 export const chatContainer = cva(
-  "w-full max-w-2xl mx-auto h-[85vh] max-h-[700px] flex flex-col metro-border bg-card/80 backdrop-blur-sm rounded-md overflow-hidden metro-glow"
+  "mx-auto flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden rounded-none metro-border bg-card/85 backdrop-blur-sm sm:h-[85vh] sm:max-h-[700px] sm:rounded-md sm:metro-glow"
 );
 
 export const chatHeader = cva(
-  "flex items-center gap-4 p-4 border-b border-border bg-muted/30"
+  "flex items-center gap-2 border-b border-border bg-muted/30 px-3 py-3 sm:gap-4 sm:p-4"
 );
 
 export const avatarButton = cva(
-  "relative w-12 h-12 rounded-full border-2 border-primary/40 overflow-hidden shrink-0 hover:border-primary/70 transition-all group"
+  "group relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-primary/40 transition-all hover:border-primary/70 sm:h-12 sm:w-12"
 );
 
 export const avatarInner = cva(
-  "w-full h-full bg-primary/10 flex items-center justify-center font-mono text-primary text-lg group-hover:bg-primary/20 transition-all"
+  "flex h-full w-full items-center justify-center bg-primary/10 font-mono text-sm text-primary transition-all group-hover:bg-primary/20 sm:text-lg"
 );
 
 export const headerName = cva(
-  "font-mono text-primary text-glow-amber tracking-wider text-sm"
+  "font-mono text-xs tracking-wider text-primary text-glow-amber sm:text-sm"
 );
 
 export const headerSubtitle = cva(
-  "font-mono text-xs text-muted-foreground tracking-wider"
+  "truncate font-mono text-[10px] leading-tight tracking-wider text-muted-foreground sm:text-xs"
 );
 
 export const statusIndicator = cva(
-  "ml-auto flex items-center gap-2"
+  "ml-auto hidden items-center gap-2 sm:flex"
 );
 
 export const messagesArea = cva(
-  "flex-1 overflow-y-auto p-4 space-y-4 metro-scrollbar"
+  "metro-scrollbar flex-1 space-y-3 overflow-y-auto p-3 sm:space-y-4 sm:p-4"
 );
 
 export const messageBubble = cva(
-  "max-w-[80%] px-4 py-3 rounded-sm font-body text-sm leading-relaxed",
+  "max-w-[90%] rounded-sm px-3 py-2.5 font-body text-[13px] leading-relaxed sm:max-w-[80%] sm:px-4 sm:py-3 sm:text-sm",
   {
     variants: {
       sender: {
@@ -52,13 +52,13 @@ export const messageLabel = cva(
 );
 
 export const inputBar = cva(
-  "p-4 border-t border-border bg-muted/20"
+  "border-t border-border bg-muted/20 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:p-4 sm:pb-4"
 );
 
 export const textInput = cva(
-  "flex-1 bg-input border border-border rounded-sm px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 transition-all"
+  "min-w-0 flex-1 rounded-sm border border-border bg-input px-3 py-2.5 font-mono text-[13px] text-foreground placeholder:text-muted-foreground/40 transition-all focus:border-primary/50 focus:outline-none sm:px-4 sm:py-3 sm:text-sm"
 );
 
 export const sendButton = cva(
-  "w-12 h-12 flex items-center justify-center border border-border rounded-sm bg-muted/30 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border border-border bg-muted/30 text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30 sm:h-12 sm:w-12"
 );
