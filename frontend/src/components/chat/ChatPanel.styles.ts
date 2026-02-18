@@ -13,7 +13,7 @@ export const avatarButton = cva(
 );
 
 export const avatarInner = cva(
-  "flex h-full w-full items-center justify-center bg-primary/10 font-mono text-sm text-primary transition-all group-hover:bg-primary/20 sm:text-lg"
+  "h-full w-full bg-primary/10 transition-all group-hover:bg-primary/20"
 );
 
 export const headerName = cva(

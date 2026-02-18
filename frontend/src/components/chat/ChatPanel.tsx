@@ -33,6 +33,7 @@ interface ChatPanelProps {
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+const ACTION_OR_THOUGHT_PATTERN = /(\*\*[^*]+\*\*|\*[^*]+\*)/g;
 
 function mapMessagesForApi(messages: Message[], userName: string): ChatApiMessage[] {
   const conversation: ChatApiMessage[] = messages.map((message) => ({
@@ -68,6 +69,26 @@ async function requestArtyomReply(messages: Message[], userName: string): Promis
   }
 
   return text;
+}
+
+function renderMessageText(text: string) {
+  return text.split(ACTION_OR_THOUGHT_PATTERN).map((part, index) => {
+    const isDoubleWrapped = part.startsWith("**") && part.endsWith("**");
+    const isSingleWrapped = part.startsWith("*") && part.endsWith("*");
+
+    if (isDoubleWrapped || isSingleWrapped) {
+      const markerLength = isDoubleWrapped ? 2 : 1;
+      const content = part.slice(markerLength, part.length - markerLength);
+
+      return (
+        <span key={index} className="italic opacity-75">
+          {content}
+        </span>
+      );
+    }
+
+    return <span key={index}>{part}</span>;
+  });
 }
 
 const ChatPanel = ({ userName }: ChatPanelProps) => {
@@ -138,7 +159,14 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
             className={avatarButton()}
             aria-label="View Artyom data log"
           >
-            <div className={avatarInner()}>A</div>
+            <div className={avatarInner()}>
+              <img
+                src="/artem%20metro%202033%20redux.webp"
+                alt="Artyom"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
             <div className="absolute inset-0 rounded-full border border-primary/10 group-hover:metro-glow" />
           </button>
           <div className="min-w-0">
@@ -159,7 +187,7 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
             >
               <div className={messageBubble({ sender: msg.sender })}>
                 <div className={messageLabel()}>{msg.sender === "user" ? `[${userName}]` : "[ARTYOM]"}</div>
-                {msg.text}
+                <div className="whitespace-pre-wrap">{renderMessageText(msg.text)}</div>
               </div>
             </div>
           ))}
