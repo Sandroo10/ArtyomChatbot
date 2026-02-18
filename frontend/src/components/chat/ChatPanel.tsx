@@ -171,7 +171,7 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
           </button>
           <div className="min-w-0">
             <h2 className={headerName()}>ARTYOM</h2>
-            <p className={headerSubtitle()}>Metro Wanderer / Survivor</p>
+            <p className={headerSubtitle()}>Hero of Metro / D6 Soldier / Survivor</p>
           </div>
           <div className={statusIndicator()}>
             <div className="h-2 w-2 rounded-full bg-metro-hud flicker" />

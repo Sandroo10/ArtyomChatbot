@@ -8,7 +8,6 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 const MAX_HISTORY_MESSAGES = 10;
 
-// Basic middleware for CORS and JSON request parsing.
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
@@ -155,12 +154,10 @@ function buildSystemPrompt(userName) {
 
 
 function buildConversation(messages, systemPrompt) {
-  // Pass only the latest messages to control token usage and latency.
   const history = messages
     .filter((message) => message.role === "user" || message.role === "assistant")
     .slice(-MAX_HISTORY_MESSAGES);
 
-  // System prompt is always prepended so Artyom keeps consistent behavior.
   return [{ role: "system", content: systemPrompt }, ...history];
 }
 
@@ -223,7 +220,6 @@ async function generateReply(messages) {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    // Validate/normalize input coming from the frontend.
     const messages = sanitizeMessages(req.body && req.body.messages);
 
     if (messages.length === 0) {
@@ -232,12 +228,10 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    // Name is read from the first user message to personalize Artyom's replies.
     const userName = extractUserName(messages);
     const systemPrompt = buildSystemPrompt(userName);
     const conversation = buildConversation(messages, systemPrompt);
 
-    // Call Hugging Face provider using env-based credentials.
     const text = await generateReply(conversation);
 
     return res.json({ text });

@@ -31,7 +31,7 @@ const CharacterModal = ({ open, onClose }: CharacterModalProps) => {
 
         <h2 className={characterName()}>ARTYOM</h2>
         <p className={classification()}>
-          CLASSIFICATION: METRO WANDERER / SURVIVOR
+          CLASSIFICATION: HERO OF METRO/ D6 SOLDIER / SURVIVOR
         </p>
 
         <div className={bodyText()}>
