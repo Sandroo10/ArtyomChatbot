@@ -42,14 +42,6 @@ npm install
 node server.js
 ```
 
-Create `backend/.env` with:
-
-```env
-HF_TOKEN=your_hugging_face_token
-HF_MODEL=mistralai/Mistral-7B-Instruct-v0.2
-PORT=3001
-```
-
 ### 2) Frontend
 
 ```sh
@@ -58,11 +50,6 @@ npm install
 npm run dev
 ```
 
-Create `frontend/.env` or `frontend/.env.local` with:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
-```
 
 ## API Contract
 
