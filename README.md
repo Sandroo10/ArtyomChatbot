@@ -1,40 +1,42 @@
-# Metro Echoes
+# Metro Chatbot Monorepo
 
-## Project info
+This repository now contains:
 
-This is a Next.js + React + TypeScript application.
+- `frontend/`: Next.js Metro chatbot UI
+- `backend/`: Express API server with `POST /api/chat`
 
-## Getting started
-
-Requirements:
-
-- Node.js 18+
-- npm
-
-Install and run:
+## Frontend
 
 ```sh
+cd frontend
 npm install
 npm run dev
 ```
 
-Build and run production:
+Optional environment variable (`frontend/.env.local`):
 
-```sh
-npm run build
-npm run start
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 ```
 
-## Testing
+## Backend
 
 ```sh
-npm test
+cd backend
+npm install
+node server.js
 ```
 
-## Tech stack
+Required environment variables in `backend/.env`:
 
-- Next.js (App Router)
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```env
+HF_TOKEN=your_hugging_face_token
+HF_MODEL=mistralai/Mistral-7B-Instruct-v0.2
+PORT=3001
+```
+
+Backend endpoint:
+
+- `POST /api/chat`
+  - body: `{ "messages": [{ "role": "user", "content": "My name is Anna" }] }`
+  - response: `{ "text": "..." }`
