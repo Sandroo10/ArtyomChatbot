@@ -73,6 +73,12 @@ const NameEntryOverlay = ({ onEnter }: NameEntryOverlayProps) => {
 
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         </form>
+        <div className="w-full max-w-2xl">
+          <p className="mt-2 px-2 text-center text-[11px] italic text-muted-foreground/80 sm:mt-3 sm:text-xs">
+            This is a fan-made, non-profit concept project. It is not affiliated with, endorsed by, or connected to
+            Metro, Metro 2033, 4A Games, or Deep Silver.
+          </p>
+        </div>
       </div>
     </div>
   );

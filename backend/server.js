@@ -7,9 +7,93 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 const MAX_HISTORY_MESSAGES = 10;
+const MAX_EXCHANGES_PER_COOLDOWN = 10;
+const COOLDOWN_MS = 5 * 60 * 60 * 1000;
+const STALE_STATE_TTL_MS = 24 * 60 * 60 * 1000;
+const clientLimitState = new Map();
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
+app.set("trust proxy", true);
+
+function getFirstHeaderValue(value) {
+  if (Array.isArray(value)) {
+    return typeof value[0] === "string" ? value[0] : "";
+  }
+
+  return typeof value === "string" ? value : "";
+}
+
+function normalizeClientId(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (trimmed.length > 128) return "";
+  if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) return "";
+  return trimmed;
+}
+
+function getClientIp(req) {
+  const forwarded = getFirstHeaderValue(req.headers["x-forwarded-for"]);
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  return req.ip || req.socket?.remoteAddress || "unknown-ip";
+}
+
+function buildClientKey(req) {
+  const rawClientId = getFirstHeaderValue(req.headers["x-client-id"]);
+  const clientId = normalizeClientId(rawClientId);
+  const ip = getClientIp(req);
+  const userAgent = getFirstHeaderValue(req.headers["user-agent"]).slice(0, 120);
+
+  // Client ID improves persistence per browser; IP/UA fallback covers missing IDs.
+  return clientId ? `${clientId}:${ip}` : `${ip}:${userAgent}`;
+}
+
+function getOrCreateClientState(clientKey, now) {
+  const existing = clientLimitState.get(clientKey);
+
+  if (existing) {
+    if (existing.blockedUntil && existing.blockedUntil <= now) {
+      existing.exchangeCount = 0;
+      existing.blockedUntil = 0;
+    }
+    existing.lastSeenAt = now;
+    return existing;
+  }
+
+  const state = {
+    exchangeCount: 0,
+    blockedUntil: 0,
+    lastSeenAt: now,
+  };
+
+  clientLimitState.set(clientKey, state);
+  return state;
+}
+
+function secondsUntil(timestampMs, now) {
+  return Math.max(0, Math.ceil((timestampMs - now) / 1000));
+}
+
+function respondWithCooldown(res, blockedUntil, now) {
+  return res.status(429).json({
+    error: "Message limit reached.",
+    details: "Your adventures are halted here, Anya will accompany Artyom for now.",
+    retry_after_seconds: secondsUntil(blockedUntil, now),
+    blocked_until: new Date(blockedUntil).toISOString(),
+  });
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, state] of clientLimitState.entries()) {
+    if (now - state.lastSeenAt > STALE_STATE_TTL_MS) {
+      clientLimitState.delete(key);
+    }
+  }
+}, 60 * 60 * 1000).unref();
 
 function sanitizeMessages(rawMessages) {
   if (!Array.isArray(rawMessages)) {
@@ -220,6 +304,19 @@ async function generateReply(messages) {
 
 app.post("/api/chat", async (req, res) => {
   try {
+    const now = Date.now();
+    const clientKey = buildClientKey(req);
+    const state = getOrCreateClientState(clientKey, now);
+
+    if (state.blockedUntil > now) {
+      return respondWithCooldown(res, state.blockedUntil, now);
+    }
+
+    if (state.exchangeCount >= MAX_EXCHANGES_PER_COOLDOWN) {
+      state.blockedUntil = now + COOLDOWN_MS;
+      return respondWithCooldown(res, state.blockedUntil, now);
+    }
+
     const messages = sanitizeMessages(req.body && req.body.messages);
 
     if (messages.length === 0) {
@@ -233,8 +330,21 @@ app.post("/api/chat", async (req, res) => {
     const conversation = buildConversation(messages, systemPrompt);
 
     const text = await generateReply(conversation);
+    state.exchangeCount += 1;
+    state.lastSeenAt = Date.now();
 
-    return res.json({ text });
+    if (state.exchangeCount >= MAX_EXCHANGES_PER_COOLDOWN) {
+      state.blockedUntil = Date.now() + COOLDOWN_MS;
+    }
+
+    return res.json({
+      text,
+      limit: {
+        exchange_count: state.exchangeCount,
+        remaining_exchanges: Math.max(0, MAX_EXCHANGES_PER_COOLDOWN - state.exchangeCount),
+        blocked_until: state.blockedUntil ? new Date(state.blockedUntil).toISOString() : null,
+      },
+    });
   } catch (error) {
     console.error("POST /api/chat failed:", error);
     return res.status(500).json({

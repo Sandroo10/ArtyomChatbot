@@ -28,12 +28,53 @@ interface ChatApiMessage {
   content: string;
 }
 
+interface ChatReplyPayload {
+  text: string;
+  limit?: {
+    blocked_until?: string | null;
+  };
+}
+
 interface ChatPanelProps {
   userName: string;
 }
 
+class ChatApiError extends Error {
+  status: number;
+  retryAfterSeconds?: number;
+  blockedUntil?: string;
+
+  constructor(message: string, status: number, retryAfterSeconds?: number, blockedUntil?: string) {
+    super(message);
+    this.name = "ChatApiError";
+    this.status = status;
+    this.retryAfterSeconds = retryAfterSeconds;
+    this.blockedUntil = blockedUntil;
+  }
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 const ACTION_OR_THOUGHT_PATTERN = /(\*\*[^*]+\*\*|\*[^*]+\*)/g;
+const CLIENT_ID_STORAGE_KEY = "metro_chat_client_id";
+
+function getOrCreateClientId() {
+  if (typeof window === "undefined") {
+    return "unknown-client";
+  }
+
+  const existing = window.localStorage.getItem(CLIENT_ID_STORAGE_KEY);
+  if (existing) {
+    return existing;
+  }
+
+  const newId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  window.localStorage.setItem(CLIENT_ID_STORAGE_KEY, newId);
+  return newId;
+}
 
 function mapMessagesForApi(messages: Message[], userName: string): ChatApiMessage[] {
   const conversation: ChatApiMessage[] = messages.map((message) => ({
@@ -45,11 +86,12 @@ function mapMessagesForApi(messages: Message[], userName: string): ChatApiMessag
   return [{ role: "user", content: `My name is ${userName}.` }, ...conversation];
 }
 
-async function requestArtyomReply(messages: Message[], userName: string): Promise<string> {
+async function requestArtyomReply(messages: Message[], userName: string): Promise<ChatReplyPayload> {
   const response = await fetch(`${API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "x-client-id": getOrCreateClientId(),
     },
     body: JSON.stringify({
       messages: mapMessagesForApi(messages, userName),
@@ -60,7 +102,14 @@ async function requestArtyomReply(messages: Message[], userName: string): Promis
 
   if (!response.ok) {
     const reason = payload && payload.details ? payload.details : "Chat request failed.";
-    throw new Error(reason);
+    const retryAfterSeconds =
+      payload && typeof payload.retry_after_seconds === "number"
+        ? payload.retry_after_seconds
+        : undefined;
+    const blockedUntil =
+      payload && typeof payload.blocked_until === "string" ? payload.blocked_until : undefined;
+
+    throw new ChatApiError(reason, response.status, retryAfterSeconds, blockedUntil);
   }
 
   const text = payload && typeof payload.text === "string" ? payload.text.trim() : "";
@@ -68,7 +117,7 @@ async function requestArtyomReply(messages: Message[], userName: string): Promis
     throw new Error("Empty reply from chat provider.");
   }
 
-  return text;
+  return payload as ChatReplyPayload;
 }
 
 function renderMessageText(text: string) {
@@ -101,7 +150,9 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
   ]);
   const [input, setInput] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const [isAwaitingReply, setIsAwaitingReply] = useState(false);
+  const [isLimitReached, setIsLimitReached] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -111,6 +162,12 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isAwaitingReply) return;
+
+    if (isLimitReached) {
+      setIsLimitReached(true);
+      setShowLimitModal(true);
+      return;
+    }
 
     const userMsg: Message = {
       id: Date.now(),
@@ -124,7 +181,8 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
     setIsAwaitingReply(true);
 
     try {
-      const responseText = await requestArtyomReply(updatedMessages, userName);
+      const responsePayload = await requestArtyomReply(updatedMessages, userName);
+      const responseText = responsePayload.text.trim();
 
       setMessages((prev) => [
         ...prev,
@@ -134,15 +192,26 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
           text: responseText,
         },
       ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: "artyom",
-          text: "Sorry Soldier, Signal is breaking up. I could not answer just now. Try again.",
-        },
-      ]);
+
+      if (responsePayload.limit?.blocked_until) {
+        setIsLimitReached(true);
+        setShowLimitModal(true);
+      }
+    } catch (error) {
+      if (error instanceof ChatApiError && error.status === 429) {
+        setMessages((prev) => prev.filter((message) => message.id !== userMsg.id));
+        setIsLimitReached(true);
+        setShowLimitModal(true);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            sender: "artyom",
+            text: "Sorry Soldier, Signal is breaking up. I could not answer just now. Try again.",
+          },
+        ]);
+      }
     } finally {
       setIsAwaitingReply(false);
     }
@@ -151,6 +220,31 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
   return (
     <>
       <CharacterModal open={showModal} onClose={() => setShowModal(false)} />
+      {showLimitModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-background/90 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Message limit reached"
+        >
+          <div className="w-full max-w-md rounded-md border border-border bg-card/95 p-6 sm:p-7">
+            <p className="font-mono text-sm leading-relaxed text-foreground sm:text-base">
+              Your adventures are halted here, Anya will accompany Artyom for now.
+            </p>
+            <p className="mt-3 text-sm italic text-muted-foreground">
+              this is the message limit for this beta version. Come back in 5 hours.
+            </p>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="rounded-sm border border-border px-4 py-2 text-xs uppercase tracking-[0.12em] text-muted-foreground transition-all hover:border-muted-foreground hover:text-foreground"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={chatContainer()}>
         <div className={chatHeader()}>
@@ -213,11 +307,11 @@ const ChatPanel = ({ userName }: ChatPanelProps) => {
               placeholder="Speak into the darkness..."
               className={textInput()}
               aria-label="Type your message"
-              disabled={isAwaitingReply}
+              disabled={isAwaitingReply || isLimitReached}
             />
             <button
               type="submit"
-              disabled={!input.trim() || isAwaitingReply}
+              disabled={!input.trim() || isAwaitingReply || isLimitReached}
               className={sendButton()}
               aria-label="Send message"
             >

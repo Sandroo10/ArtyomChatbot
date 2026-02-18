@@ -20,11 +20,21 @@ export default function HomePage() {
       <main
         className={
           userName
-            ? "relative z-10 flex min-h-[100dvh] w-full items-stretch justify-center p-0 sm:min-h-screen sm:items-center sm:p-4"
+            ? "relative z-10 flex min-h-[100dvh] w-full items-end justify-center p-2 sm:min-h-screen sm:items-center sm:p-4"
             : "relative z-10 flex min-h-[100dvh] w-full items-center justify-center p-4"
         }
       >
-        {!userName ? <NameEntryOverlay onEnter={setUserName} /> : <ChatPanel userName={userName} />}
+        {!userName ? (
+          <NameEntryOverlay onEnter={setUserName} />
+        ) : (
+          <div className="w-full max-w-2xl">
+            <ChatPanel userName={userName} />
+            <p className="mt-2 px-2 text-center text-[11px] italic text-muted-foreground/80 sm:mt-3 sm:text-xs">
+              This is a fan-made, non-profit concept project. It is not affiliated with, endorsed by, or connected to
+              Metro, Metro 2033, 4A Games, or Deep Silver.
+            </p>
+          </div>
+        )}
       </main>
     </div>
   );

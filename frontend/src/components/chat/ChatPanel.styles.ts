@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority";
 
 export const chatContainer = cva(
-  "mx-auto flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden rounded-none metro-border bg-card/85 backdrop-blur-sm sm:h-[85vh] sm:max-h-[700px] sm:rounded-md sm:metro-glow"
+  "mx-auto flex h-[calc(100dvh-3.25rem)] w-full max-w-2xl flex-col overflow-hidden rounded-none metro-border bg-card/85 backdrop-blur-sm sm:h-[85vh] sm:max-h-[700px] sm:rounded-md sm:metro-glow"
 );
 
 export const chatHeader = cva(
