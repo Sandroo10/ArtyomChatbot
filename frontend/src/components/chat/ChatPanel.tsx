@@ -54,6 +54,7 @@ class ChatApiError extends Error {
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+const NORMALIZED_API_BASE_URL = API_BASE_URL.replace(/\/+$/, "");
 const ACTION_OR_THOUGHT_PATTERN = /(\*\*[^*]+\*\*|\*[^*]+\*)/g;
 const CLIENT_ID_STORAGE_KEY = "metro_chat_client_id";
 
@@ -87,7 +88,7 @@ function mapMessagesForApi(messages: Message[], userName: string): ChatApiMessag
 }
 
 async function requestArtyomReply(messages: Message[], userName: string): Promise<ChatReplyPayload> {
-  const response = await fetch(`${API_BASE_URL}/api/chat`, {
+  const response = await fetch(`${NORMALIZED_API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
