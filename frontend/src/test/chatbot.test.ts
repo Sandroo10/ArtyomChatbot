@@ -1,4 +1,5 @@
-import { describe, expect, test } from "@jest/globals";
+// @vitest-environment node
+import { describe, expect, test } from "vitest";
 
 const TEST_API_URL = process.env.TEST_API_URL;
 
