@@ -119,16 +119,22 @@ Deploy as two Vercel projects from the same repository.
 
 ## Testing
 
-Frontend test command:
+The automated tests are in the repository-level `testing/` folder:
+
+- `testing/frontend/` covers entering the chat, message submission, reply rendering, and the client-side rate-limit experience.
+- `testing/backend/` covers invalid requests, the provider conversation contract, response-limit metadata, and the ten-message cooldown.
+
+They mock the AI provider, so they are fast, deterministic, and do not require `HF_TOKEN` or consume model quota.
+
+Run them locally:
 
 ```sh
 cd frontend
 npm run test
+
+cd ../backend
+npm test
 ```
-
-`frontend/src/test/chatbot.test.ts` runs endpoint checks against:
-
-- `TEST_API_URL` + `/api/chat`
 
 ## Weekly CI
 
@@ -136,8 +142,8 @@ Workflow: `.github/workflows/weekly-tests.yml`
 
 - Runs every Monday at 09:00 UTC
 - Also supports manual trigger (`workflow_dispatch`)
-- Requires GitHub Actions repository secret:
-  - `TEST_API_URL=https://<your-backend>.vercel.app`
+- Installs both projects and runs both test suites.
+- No repository secrets are required for these automated checks.
 
 ## Operational Notes
 

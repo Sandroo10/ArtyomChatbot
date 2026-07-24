@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:ui": "vitest run ../testing/frontend",
     "test:watch": "vitest"
   },
   "dependencies": {

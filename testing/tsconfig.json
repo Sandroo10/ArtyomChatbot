@@ -1,0 +1,21 @@
+{
+  "extends": "../frontend/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["frontend/src/*"],
+      "@testing-library/react": ["frontend/node_modules/@testing-library/react/types/index.d.ts"],
+      "react": ["frontend/node_modules/@types/react/index.d.ts"],
+      "react/jsx-runtime": ["frontend/node_modules/@types/react/jsx-runtime.d.ts"],
+      "vitest": ["frontend/node_modules/vitest/dist/index.d.ts"]
+    },
+    "typeRoots": ["../frontend/node_modules/@types"],
+    "types": ["node"]
+  },
+  "files": [
+    "../frontend/node_modules/vitest/globals.d.ts",
+    "../frontend/node_modules/@testing-library/jest-dom/types/index.d.ts"
+  ],
+  "include": ["frontend/**/*.ts", "frontend/**/*.tsx"]
+}
